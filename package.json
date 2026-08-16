@@ -1,0 +1,36 @@
+{
+  "name": "my-meta-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "mrbd:start": "mrbd start",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@mrbd/auth": "latest",
+    "@mrbd/core": "latest",
+    "@mrbd/react": "latest",
+    "@radix-ui/react-slot": "^1",
+    "class-variance-authority": "^0.7",
+    "clsx": "^2",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwind-merge": "^2"
+  },
+  "devDependencies": {
+    "mrbd-cli": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "tailwindcss-animate": "^1",
+    "typescript": "latest"
+  }
+}
