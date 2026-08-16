@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta HUD - 10 Hand Multi-Play Poker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #090226 0%, #00000d 50%, #000000 100%);
+            color: #FFFFFF;
+            font-family: 'Arial Black', Impact, sans-serif;
+            width: 600px;
+            height: 600px;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            user-select: none;
+        }
+
+        #hands-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 6px;
+            height: 190px;
+            margin-top: 2px;
+        }
+
+        .mini-hand-box {
+            border: 2px solid #9c1f9c;
+            background-color: rgba(0, 0, 0, 0.85);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3px;
+            box-sizing: border-box;
+        }
+
+        .mini-cards-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1px;
+        }
+
+        .mini-card {
+            background-color: #FFFFFF;
+            color: #000000;
+            font-size: 10px;
+            font-weight: bold;
+            width: 18px;
+            height: 28px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .mini-hand-payout {
+            font-size: 9px;
+            text-align: center;
+            background-color: #000000;
+            color: #FFFF00;
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+            height: 14px;
+            line-height: 14px;
+            border-top: 1px solid #222;
+        }
+
+        .mini-hand-payout.win-flash {
+            background-color: #FFFF00;
+            color: #000000;
+        }
+
+        #middle-display-zone {
+            display: flex;
+            height: 170px;
+            margin: 4px 0;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #win-summary-box {
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            border: 2px solid #444;
+            background-color: #000000;
+            font-size: 11px;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 32px;
+        }
+
+        .summary-count {
+            background-color: #222;
+            color: #FFFFFF;
+            width: 32px;
+            font-weight: bold;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .summary-label {
+            flex: 1;
+            padding-left: 8px;
+            font-weight: bold;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        #srow-twopair { border-color: #a322a3; }
+        #srow-twopair .summary-count { background-color: #a322a3; color: #FFF; }
+        #srow-twopair .summary-label { background-color: #250226; color: #ffb3ff; }
+
+        #srow-fullhouse { border-color: #00cc00; }
+        #srow-fullhouse .summary-count { background-color: #00cc00; color: #000; }
+        #srow-fullhouse .summary-label { background-color: #002200; color: #b3ffb3; }
+
+        #main-hand-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #hand-title-banner {
+            font-size: 18px;
+            color: #55b6ff;
+            text-shadow: 1px 1px 4px #000;
+            margin-bottom: 6px;
+            height: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .base-cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .base-card-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .main-card {
+            width: 74px;
+            height: 104px;
+            background-color: #FFFFFF;
+            color: #000000;
+            border-radius: 6px;
+            border: 2px solid #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            box-sizing: border-box;
+            cursor: pointer;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.6);
+        }
+
+        .main-card.selected-focus {
+            border-color: #00FFFF;
+            box-shadow: 0 0 10px #00FFFF;
+        }
+
+        .card-top-left {
+            font-size: 20px;
+            line-height: 18px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .card-center-suit {
+            font-size: 38px;
+            line-height: 38px;
+            text-align: center;
+            align-self: center;
+        }
+
+        .hold-badge {
+            width: 66px;
+            height: 18px;
+            background-color: transparent;
+            color: transparent;
+            border: 1px solid transparent;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 18px;
+            border-radius: 3px;
+        }
+
+        .hold-badge.active-hold {
+            background-color: #FFFF00;
+            color: #000000;
+            border-color: #cccc00;
+        }
+
+        #stats-panel {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .data-display-slot {
+            flex: 1;
+            background: linear-gradient(to bottom, #141430, #000000);
+            border: 2px solid #333355;
+            border-radius: 5px;
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slot-title {
+            font-size: 10px;
+            color: #a6ffff;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .slot-val {
+            font-size: 16px;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+
+        .bet-adjuster-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .bet-step-btn {
+            background-color: #333;
+            color: #FFF;
+            border: 1px solid #555;
+            width: 22px;
+            height: 22px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #hud-controls {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            height: 44px;
+        }
+
+        .hud-btn {
+            background: linear-gradient(to bottom, #e6e61a 0%, #999900 100%);
+            color: #000000;
+            border: 2px solid #ffff66;
+            font-family: 'Arial Black', sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0px 3px 4px rgba(0,0,0,0.5);
+        }
+
+        .hud-btn:active {
+            filter: brightness(1.2);
+        }
+
+        .hud-btn#btn-deal {
+            background: linear-gradient(to bottom, #44ff44 0%, #008800 100%);
+            border-color: #99ff99;
+        }
+
+        .suit-red { color: #FF2222 !important; }
+        .suit-black { color: #000000 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="hands-grid">
+        <div class="mini-hand-box" id="mhand-0"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-1"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-2"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-3"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-4"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-5"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-6"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-7"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-8"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+        <div class="mini-hand-box" id="mhand-9"><div class="mini-cards-row"></div><div class="mini-hand-payout">-</div></div>
+    </div>
+
+    <div id="middle-display-zone">
+        <div id="win-summary-box">
+            <div class="summary-row" id="srow-twopair">
+                <div class="summary-count" id="scount-twopair">0</div>
+                <div class="summary-label">TWO PAIR</div>
+            </div>
+            <div class="summary-row" id="srow-fullhouse">
+                <div class="summary-count" id="scount-fullhouse">0</div>
+                <div class="summary-label">FULL HOUSE</div>
+            </div>
+        </div>
+
+        <div id="main-hand-area">
+            <div id="hand-title-banner">PRESS DEAL TO START</div>
+            <div class="base-cards-container">
+                <div class="base-card-wrapper" onclick="toggleHoldCardIndex(0)">
+                    <div class="main-card" id="card-0">-</div>
+                    <div class="hold-badge" id="badge-0">HOLD</div>
+                </div>
+                <div class="base-card-wrapper" onclick="toggleHoldCardIndex(1)">
+                    <div class="main-card" id="card-1">-</div>
+                    <div class="hold-badge" id="badge-1">HOLD</div>
+                </div>
+                <div class="base-card-wrapper" onclick="toggleHoldCardIndex(2)">
+                    <div class="main-card" id="card-2">-</div>
+                    <div class="hold-badge" id="badge-2">HOLD</div>
+                </div>
+                <div class="base-card-wrapper" onclick="toggleHoldCardIndex(3)">
+                    <div class="main-card" id="card-3">-</div>
+                    <div class="hold-badge" id="badge-3">HOLD</div>
+                </div>
+                <div class="base-card-wrapper" onclick="toggleHoldCardIndex(4)">
+                    <div class="main-card" id="card-4">-</div>
+                    <div class="hold-badge" id="badge-4">HOLD</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stats-panel">
+        <div class="data-display-slot">
+            <div class="slot-title">WIN</div>
+            <div class="slot-val" id="val-win">0</div>
+        </div>
+        <div class="data-display-slot">
+            <div class="slot-title">BET PER HAND</div>
+            <div class="bet-adjuster-row">
+                <button class="bet-step-btn" onclick="adjustBetLevelDown()">-</button>
+                <div class="slot-val" id="val-betperhand">100</div>
+                <button class="bet-step-btn" onclick="adjustBetLevelUp()">+</button>
+            </div>
+        </div>
+        <div class="data-display-slot">
+            <div class="slot-title">BET</div>
+            <div class="slot-val" id="val-totalbet">1,000</div>
+        </div>
+        <div class="data-display-slot">
+            <div class="slot-title">CREDITS</div>
+            <div class="slot-val" id="val-credits">5,000</div>
+        </div>
+    </div>
+
+    <div id="hud-controls">
+        <button class="hud-btn" id="btn-pays">PAYS</button>
+        <button class="hud-btn" id="btn-turbo">TURBO >>></button>
+        <button class="hud-btn" id="btn-hands">HANDS 10</button>
+        <button class="hud-btn" id="btn-betmax" onclick="maxBetShortcutAction()">BET MAX</button>
+        <button class="hud-btn" id="btn-deal" onclick="triggerMainEngineCycle()">DEAL</button>
+    </div>
+
+<script>
+    const SUITS = [
+        { symbol: '♠', name: 'S', isRed: false },
+        { symbol: '♥', name: 'H', isRed: true },
+        { symbol: '♦', name: 'D', isRed: true },
+        { symbol: '♣', name: 'C', isRed: false }
+    ];
+    const VALUES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+    const VALUE_MAP = { '2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14 };
+
+    const PAYTABLE = {
+        ROYAL_FLUSH: 800,
+        STRAIGHT_FLUSH: 50,
+        FOUR_OF_A_KIND: 25,
+        FULL_HOUSE: 9,
+        FLUSH: 6,
+        STRAIGHT: 4,
+        THREE_OF_A_KIND: 3,
+        TWO_PAIR: 2,
+        JACKS_OR_BETTER: 1,
+        NOTHING: 0
+    };
+
+    let deck = [];
+    let baseHand = [];
+    let holds = [false, false, false, false, false];
+    let credits = 5000;
+    let betPerHand = 100;
+    let currentRoundWinnings = 0;
+    let gameState = 'IDLE'; 
+    let activeCardHighlightIndex = 0;
+    
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        try {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            let now = audioCtx.currentTime;
+            
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'deal') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'draw') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.25);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'lose') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        } catch(e) {}
+    }
+
+    function buildStandardDeck() {
+        deck = [];
+        for (let s of SUITS) {
+            for (let v of VALUES) {
+                deck.push({ value: v, suit: s });
+            }
+        }
+    }
+
+    function randomizeDeckOrder() {
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = deck[i];
+            deck[i] = deck[j];
+            deck[j] = temp;
+        }
+    }
+
+    function adjustBetLevelUp() {
+        initAudio(); playSound('click');
+        if (gameState !== 'IDLE') return;
+        betPerHand = (betPerHand >= 500) ? 100 : betPerHand + 100;
+        refreshScoreboardUI();
+    }
+
+    function adjustBetLevelDown() {
+        initAudio(); playSound('click');
+        if (gameState !== 'IDLE') return;
+        betPerHand = (betPerHand <= 100) ? 500 : betPerHand - 100;
+        refreshScoreboardUI();
+    }
+
+    function maxBetShortcutAction() {
+        initAudio();
+        if (gameState !== 'IDLE') return;
+        betPerHand = 500;
+        refreshScoreboardUI();
+        triggerMainEngineCycle();
+    }
+
+    function refreshScoreboardUI() {
+        document.getElementById('val-credits').innerText = credits.toLocaleString();
+        document.getElementById('val-betperhand').innerText = betPerHand.toLocaleString();
+        document.getElementById('val-totalbet').innerText = (betPerHand * 10).toLocaleString();
+        document.getElementById('val-win').innerText = currentRoundWinnings.toLocaleString();
+    }
+
+    function triggerMainEngineCycle() {
+        initAudio();
+        if (gameState === 'IDLE') {
+            const totalBetCost = betPerHand * 10;
+            if (credits < totalBetCost) {
+                document.getElementById('hand-title-banner').innerText = "LOW CREDITS";
+                playSound('lose');
+                return;
+            }
+            credits -= totalBetCost;
+            currentRoundWinnings = 0;
+            refreshScoreboardUI();
+
+            buildStandardDeck();
+            randomizeDeckOrder();
+
+            baseHand = [];
+            for(let i=0; i<5; i++) {
+                baseHand.push(deck.pop());
+            }
+            holds = [false, false, false, false, false];
+            gameState = 'DEALT';
+
+            document.getElementById('btn-deal').innerText = "DRAW";
+            document.getElementById('hand-title-banner').innerText = "HOLD CARDS";
+            playSound('deal');
+
+            updateBaseHandGraphicsView();
+            syncHoldsToUpperMatrix();
+        } else if (gameState === 'DEALT') {
+            executeMultiplayDrawPhase();
+        }
+    }
+
+    function toggleHoldCardIndex(idx) {
+        initAudio();
+        if (gameState !== 'DEALT') return;
+        holds[idx] = !holds[idx];
+        playSound('click');
+        
+        const badge = document.getElementById(`badge-${idx}`);
+        if (holds[idx]) {
+            badge.classList.add('active-hold');
+        } else {
+            badge.classList.remove('active-hold');
+        }
+        syncHoldsToUpperMatrix();
+    }
+
+    function syncHoldsToUpperMatrix() {
+        for (let i = 0; i < 10; i++) {
+            const container = document.getElementById(`mhand-${i}`);
+            const rowArea = container.querySelector('.mini-cards-row');
+            rowArea.innerHTML = '';
+            
+            for (let c = 0; c < 5; c++) {
+                const miniCardBlock = document.createElement('div');
+                if (holds[c]) {
+                    const card = baseHand[c];
+                    miniCardBlock.className = `mini-card ${card.suit.isRed ? 'suit-red' : 'suit-black'}`;
+                    miniCardBlock.innerText = `${card.value}${card.suit.symbol}`;
+                } else {
+                    miniCardBlock.className = 'mini-card';
+                    miniCardBlock.style.backgroundColor = '#111122';
+                    miniCardBlock.style.color = '#555577';
+                    miniCardBlock.innerText = '?';
+                }
+                rowArea.appendChild(miniCardBlock);
+            }
+            container.querySelector('.mini-hand-payout').innerText = '-';
+            container.querySelector('.mini-hand-payout').className = 'mini-hand-payout';
+        }
+    }
+
+    function updateBaseHandGraphicsView() {
+        baseHand.forEach((card, idx) => {
+            const el = document.getElementById(`card-${idx}`);
+            const textClass = card.suit.isRed ? 'suit-red' : 'suit-black';
+            el.innerHTML = `
+                <div class="card-top-left ${textClass}">${card.value}</div>
+                <div class="card-center-suit ${textClass}">${card.suit.symbol}</div>
+                <div style="font-size:10px; text-align:right; font-weight:bold;" class="${textClass}">${card.value}</div>
+            `;
+            document.getElementById(`badge-${idx}`).className = holds[idx] ? 'hold-badge active-hold' : 'hold-badge';
+        });
+    }
+
+    function executeMultiplayDrawPhase() {
+        let tallyCategories = { TWO_PAIR: 0, FULL_HOUSE: 0 };
+        let roundCombinedWinnings = 0;
+
+        for (let handIdx = 0; handIdx < 10; handIdx++) {
+            buildStandardDeck();
+            deck = deck.filter(deckCard => 
+                !baseHand.some(baseCard => baseCard.value === deckCard.value && baseCard.suit.name === deckCard.suit.name)
+            );
+            randomizeDeckOrder();
+
+            let finalizedHand = [];
+            for(let i=0; i<5; i++) {
+                if(holds[i]) {
+                    finalizedHand.push(baseHand[i]);
+                } else {
+                    finalizedHand.push(deck.pop());
+                }
+            }
+            
+            let scoring = analyzePokerHandStrength(finalizedHand);
+            let cashPayout = PAYTABLE[scoring.rank] * betPerHand;
+            roundCombinedWinnings += cashPayout;
+
+            if (scoring.rank === 'TWO_PAIR') tallyCategories.TWO_PAIR++;
+            if (scoring.rank === 'FULL_HOUSE') tallyCategories.FULL_HOUSE++;
+
+            renderMiniatureGridRow(handIdx, finalizedHand, scoring.label, cashPayout);
+        }
+
+        buildStandardDeck();
+        deck = deck.filter(deckCard => 
+            !baseHand.some(baseCard => baseCard.value === deckCard.value && baseCard.suit.name === deckCard.suit.name)
+        );
+        randomizeDeckOrder();
+
+        for (let i = 0; i < 5; i++) {
+            if (!holds[i]) {
+                baseHand[i] = deck.pop();
+            }
+        }
+        updateBaseHandGraphicsView();
+
+        let baseEval = analyzePokerHandStrength(baseHand);
+        document.getElementById('hand-title-banner').innerText = baseEval.label;
+
+        document.getElementById('scount-twopair').innerText = tallyCategories.TWO_PAIR;
+        document.getElementById('scount-fullhouse').innerText = tallyCategories.FULL_HOUSE;
+
+        currentRoundWinnings = roundCombinedWinnings;
+        credits += currentRoundWinnings;
+        gameState = 'IDLE';
+
+        document.getElementById('btn-deal').innerText = "DEAL";
+        
+        if (currentRoundWinnings > 0) {
+            playSound('win');
+        } else {
+            playSound('lose');
+        }
+        
+        refreshScoreboardUI();
+    }
+
+    function renderMiniatureGridRow(idx, hand, label, payout) {
+        const rowElement = document.getElementById(`mhand-${idx}`);
+        const cardsContainer = rowElement.querySelector('.mini-cards-row');
+        cardsContainer.innerHTML = '';
+
+        hand.forEach(card => {
+            const cardBlock = document.createElement('div');
+            cardBlock.className = `mini-card ${card.suit.isRed ? 'suit-red' : 'suit-black'}`;
+            cardBlock.innerText = `${card.value}${card.suit.symbol}`;
+            cardsContainer.appendChild(cardBlock);
+        });
+
+        const payoutTextSlot = rowElement.querySelector('.mini-hand-payout');
+        if (payout > 0) {
+            payoutTextSlot.innerText = `${label} +${payout}`;
+            payoutTextSlot.classList.add('win-flash');
+        } else {
+            payoutTextSlot.innerText = 'LOSE';
+            payoutTextSlot.className = 'mini-hand-payout';
+        }
+    }
+
+    function analyzePokerHandStrength(hand) {
+        let numericValues = [];
+        for (let i = 0; i < 5; i++) {
+            numericValues.push(VALUE_MAP[hand[i].value]);
+        }
+        numericValues.sort((a,b) => a-b);
+
+        let bins = {};
+        numericValues.forEach(v => bins[v] = (bins[v] || 0) + 1);
+        
+        let clusterSizes = [];
+        for (let k in bins) {
+            clusterSizes.push(bins[k]);
+        }
+        clusterSizes.sort((a,b) => b-a);
+
+        let isFlush = true;
+        let firstSuit = hand[0].suit.name;
+        for (let i = 1; i < 5; i++) {
+            if (hand[i].suit.name !== firstSuit) isFlush = false;
+        }
+
+        let isStraight = false;
+        let uniqueVals = [];
+        for (let k in bins) uniqueVals.push(parseInt(k));
+        uniqueVals.sort((a,b) => a-b);
+
+        if (uniqueVals.length === 5) {
+            if ((uniqueVals[4] - uniqueVals[0]) === 4) {
+                isStraight = true;
+            } else if (uniqueVals[0] === 2 && uniqueVals[1] === 3 && uniqueVals[2] === 4 && uniqueVals[3] === 5 && uniqueVals[4] === 14) {
+                isStraight = true;
+            }
+        }
+
+        if (isFlush && isStraight) {
+            if (numericValues[0] === 10 || (uniqueVals[0] === 2 && uniqueVals[4] === 14 && uniqueVals[3] === 5)) {
+                if (uniqueVals[0] === 2) return { rank: 'STRAIGHT_FLUSH', label: 'STR FLUSH' };
+                return { rank: 'ROYAL_FLUSH', label: 'ROYAL FLUSH' };
+            }
+            return { rank: 'STRAIGHT_FLUSH', label: 'STR FLUSH' };
+        }
+        
+        if (clusterSizes[0] === 4) return { rank: 'FOUR_OF_A_KIND', label: '4 OF A KIND' };
+        if (clusterSizes[0] === 3 && clusterSizes[1] === 2) return { rank: 'FULL_HOUSE', label: 'FULL HOUSE' };
+        if (isFlush) return { rank: 'FLUSH', label: 'FLUSH' };
+        if (isStraight) return { rank: 'STRAIGHT', label: 'STRAIGHT' };
+        if (clusterSizes[0] === 3) return { rank: 'THREE_OF_A_KIND', label: '3 OF A KIND' };
+        if (clusterSizes[0] === 2 && clusterSizes[1] === 2) return { rank: 'TWO_PAIR', label: 'TWO PAIR' };
+        
+        if (clusterSizes[0] === 2) {
+            for (let pairValue in bins) {
+                if (bins[pairValue] === 2 && parseInt(pairValue) >= 11) {
+                    return { rank: 'JACKS_OR_BETTER', label: 'JACKS OR BTR' };
+                }
+            }
+        }
+
+        return { rank: 'NOTHING', label: 'GAME OVER' };
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === "ArrowRight") {
+            activeCardHighlightIndex = (activeCardHighlightIndex + 1) % 5;
+            highlightFocusedElementBorder();
+        } else if (e.key === "ArrowLeft") {
+            activeCardHighlightIndex = (activeCardHighlightIndex - 1 + 5) % 5;
+            highlightFocusedElementBorder();
+        } else if (e.key === "Enter") {
+            if (gameState === 'DEALT') {
+                toggleHoldCardIndex(activeCardHighlightIndex);
+            } else {
+                triggerMainEngineCycle();
+            }
+        }
+    });
+
+    function highlightFocusedElementBorder() {
+        document.querySelectorAll('.main-card').forEach(el => el.classList.remove('selected-focus'));
+        if (gameState === 'DEALT') {
+            document.getElementById(`card-${activeCardHighlightIndex}`).classList.add('selected-focus');
+        }
+    }
+
+    refreshScoreboardUI();
+</script>
+</body>
+</html>
